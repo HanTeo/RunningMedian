@@ -2,6 +2,7 @@
 #include <exception>
 #include <sstream>
 #include <vector>
+#include "utils.cc"
 
 using namespace std;
 
@@ -13,49 +14,27 @@ public:
         k_index = k;
     }
 
-    string Insert(T n)
+    string Insert(const T& n)
     {
-        insertSmallest(n);
+        auto number = n;
         
-        stringstream ss;
-        ss << "Input: " << n;
-        
-        int temp;
+        insertSmallestKth(number);
         
         if(isOdd())
         {
-            if(minHeap.size() > 0 && minHeap[0] < n)
-            {
-                minHeap.push_back(n);
-                push_heap(minHeap.begin(), minHeap.end(), greater<T>());
-
-                n = minHeap[0];
-
-                pop_heap(minHeap.begin(), minHeap.end(), greater<T>());
-                minHeap.pop_back();
-            }
-
-            maxHeap.push_back(n);
-            push_heap(maxHeap.begin(), maxHeap.end(), less<T>());
+            rebalanceHeap(number, minHeap, greater<T>());
+            addToHeap(number, maxHeap, less<T>());
         }
         else
         {
-            if(maxHeap.size() > 0 && n < maxHeap[0])
-            {
-                maxHeap.push_back(n);
-                push_heap(maxHeap.begin(), maxHeap.end(), less<T>());
-
-                n = maxHeap[0];
-
-                pop_heap(maxHeap.begin(), maxHeap.end(), less<T>());
-                maxHeap.pop_back();
-            }
-
-            minHeap.push_back(n);
-            push_heap(minHeap.begin(), minHeap.end(), greater<T>());
+            rebalanceHeap(number, maxHeap, less<T>());
+            addToHeap(number, minHeap, greater<T>());
         }
         
-        ss << "\tSize: " << size() << "\tMedian: " << GetMedian() << "\tElem " << k_index << ": " << GetKthElement();
+        stringstream ss;
+        ss << "Input: " << n << "\tMedian: " << GetMedian() << "\tElem " << k_index << ": " << GetKthElement() << endl;
+        //ss << to_string(minHeap) << "(" << minHeap.size() << ")\t" << to_string(maxHeap) << "(" << maxHeap.size() << ")" << endl;
+
         return ss.str();
     }
     
@@ -106,7 +85,7 @@ public:
     }
 
 private:
-    void insertSmallest(T n)
+    void insertSmallestKth(const T& n)
     {
         if(smallestKth.size() >= k_index)
         {
@@ -115,13 +94,38 @@ private:
             
             if(n < smallestKth[0])
             {
-                pop_heap(smallestKth.begin(), smallestKth.end(), less<T>());
-                smallestKth.pop_back();
+                removeFromHeapTop(smallestKth, less<T>());
             }
         }
         
-        smallestKth.push_back(n);
-        push_heap(smallestKth.begin(), smallestKth.end(), less<T>());
+        addToHeap(n, smallestKth, less<T>());
+    }
+
+    template <typename F>
+    void rebalanceHeap(int& n, vector<T>& heap, F f)
+    {
+        if(!heap.empty() && f(n, heap[0]))
+        {
+            addToHeap(n, heap, f);
+
+            n = heap[0];
+
+            removeFromHeapTop(heap, f);
+        }
+    }
+
+    template <typename F>
+    void addToHeap(const int& n, vector<T>& heap, F f)
+    {
+        heap.push_back(n);
+        push_heap(heap.begin(), heap.end(), f);
+    }
+
+    template <typename F>
+    void removeFromHeapTop(vector<T>& heap, F f)
+    {
+        pop_heap(heap.begin(), heap.end(), f);
+        heap.pop_back();
     }
 
     bool isOdd()

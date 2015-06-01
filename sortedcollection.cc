@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <exception>
 #include <sstream>
+#include <set>
+#include <iostream>
 
 using namespace std;
 
@@ -12,49 +14,95 @@ public:
         k_index = k;
     }
     
-    string Insert(T input)
+    string Insert(const T& input)
     {
-        m.insert(input);
+        if(isOdd())
+        {
+            auto bottom = minSet.cbegin();
+            int bottom_value;
+            if(!minSet.empty() && input > *bottom)
+            {
+                bottom_value = *bottom;
+                minSet.erase(bottom);
+                minSet.insert(input);
+            }
+            else
+            {
+                bottom_value = input;
+            }
 
-        int sIndex = m.size()/2;
-        auto it = m.begin();
-        
-        if(isOdd()){
-            advance(it, sIndex);
-            median = *it;
-        }else{
-            advance(it, sIndex-1);
-            median = (*it + *++it)/2;
+            maxSet.insert(bottom_value);
+        }
+        else
+        {
+            auto top = maxSet.cbegin();
+            int top_value;
+            if(!maxSet.empty() && input < *top)
+            {
+                top_value = *top;
+                maxSet.erase(top);
+                maxSet.insert(input);
+            }
+            else
+            {
+                top_value = input;
+            }
+
+            minSet.insert(top_value);
         }
         
-        if(m.size() >= k_index){
-            it = m.begin();
-            advance(it, k_index-1);
-            k_value = *it;
+        if(k_index <= size())
+        {    
+            if(maxSet.size() >= k_index)
+            {
+                auto it = maxSet.rbegin();
+                advance(it, k_index-1);
+                k_value = *it;
+            }
+            else
+            {
+                auto it = minSet.begin();
+                advance(it, k_index-maxSet.size()-1);
+                k_value = *it;
+            }
         }
         else
         {
             k_value = T();
         }
-        
+
         stringstream ss;
-        ss << "Input: " << input << "\tMedian: " << median << "\tElem " << k_index << ": " << k_value;
+        ss << "Input: " << input << "\tMedian: " << GetMedian() << "\tElem " << k_index << ": " << k_value << endl;
+        //ss << to_string(minSet) << "(" << minSet.size() << ")\t" << to_string(maxSet) << "(" << maxSet.size() << ")" <<endl;
         return ss.str();
     }
     
-    const multiset<T>& GetCollection()
+    T GetMedian()
     {
-        return m;
+        if(isOdd())
+        {
+            return *minSet.cbegin();
+        }
+        else
+        {
+            return (*minSet.cbegin() + *maxSet.cbegin())/2;
+        }
     }
-    
+
 private:
     bool isOdd()
     {
-        return (m.size() & 1) == 1;
+        return (size() & 1) == 1;
     }
-    
-    multiset<T> m;
+
+    int size()
+    {
+        return minSet.size() + maxSet.size();
+    }
+
+    multiset<T> minSet;
+    multiset<T, greater<T>> maxSet;
     int k_index;
-    T median;
     T k_value;
+    typename multiset<T>::iterator it_kth = minSet.end();
 };

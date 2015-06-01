@@ -1,3 +1,2 @@
-rm publisher
-rm subscriber
+rm program
 make

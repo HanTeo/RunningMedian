@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <exception>
 #include <sstream>
+#include <vector>
 
 using namespace std;
 
@@ -42,7 +43,7 @@ public:
         }
         
         stringstream ss;    
-        ss << "Input: " << input << "\tMedian: " << median << "\tElem " << k << ": " << kth;
+        ss << "Input: " << input << "\tMedian: " << median << "\tElem " << k << ": " << kth << endl;
         return ss.str();
     }
     
